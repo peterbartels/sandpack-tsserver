@@ -78,10 +78,9 @@ export default function Counter() {
           },
           files: {
             "/App.tsx": {
-              code: `import React from "react"
-import { Flex } from '@chakra-ui/react'
+              code: `import { Flex } from '@chakra-ui/react'
 
-export default function App(): JSX.Element {
+export default function App() {
   return (
     <Flex 
       w="100vw" 
@@ -121,10 +120,9 @@ export const Button = styled.a<{ primary?: boolean }>\`
     color: white;
   \`};
 \``,
-            "/App.tsx": `import React from "react"
-import { Button } from "./Button"
+            "/App.tsx": `import { Button } from "./Button"
 
-export default function App(): JSX.Element {
+export default function App() {
   return (
     <div>
       <Button>Hello world!</Button>

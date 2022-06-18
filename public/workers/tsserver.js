@@ -98,16 +98,17 @@
           dependenciesMap.set(dep, dependencies[dep]);
         }
       }
-      dependenciesMap.forEach(async (version, name) => {
+      for (let [name, version] of dependenciesMap) {
         const files2 = await fetchDependencyTyping({ name, version });
-        const hasTypes = Object.keys(files2).some((key) => key.startsWith("/" + name) && key.endsWith(".d.ts"));
-        if (hasTypes) {
-          Object.entries(files2).forEach(([key, value]) => {
-            if (isValidTypeModule(key, value)) {
-              fsMap.set(`/node_modules${key}`, value.module.code);
-            }
-          });
-          return;
+        if (files2) {
+          const hasTypes = Object.keys(files2).some((key) => key.startsWith("/" + name) && key.endsWith(".d.ts"));
+          if (hasTypes) {
+            Object.entries(files2).forEach(([key, value]) => {
+              if (isValidTypeModule(key, value)) {
+                fsMap.set(`/node_modules${key}`, value.module.code);
+              }
+            });
+          }
         }
         if (!typeVersionsFromRegistry) {
           typeVersionsFromRegistry = await fetch(TYPES_REGISTRY).then((data) => data.json()).then((data) => data.entries);
@@ -124,12 +125,18 @@
             }
           });
         }
-      });
+      };
       const system = createSystem(fsMap);
       env = createVirtualTypeScriptEnvironment(system, rootPaths, ts, compilerOpts);
-      lintSystem(entry);
+      postMessage({
+        event: 'tsserver-ready',
+        details: { fsMap, version: ts.version },
+      });
     };
     const updateFile = (filePath, content) => {
+      if (!env) {
+        return;
+      }
       env.updateFile(filePath, content);
     };
     const autocompleteAtPosition = (pos, filePath) => {
@@ -150,8 +157,7 @@
       });
     };
     const lintSystem = (filePath) => {
-      if (!env)
-        return;
+      
       let SyntacticDiagnostics = env.languageService.getSyntacticDiagnostics(filePath);
       let SemanticDiagnostic = env.languageService.getSemanticDiagnostics(filePath);
       let SuggestionDiagnostics = env.languageService.getSuggestionDiagnostics(filePath);
